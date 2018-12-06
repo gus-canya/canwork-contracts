@@ -10,6 +10,11 @@ pragma solidity ^0.4.24;
 */
 contract Job {
 
+    modifier onlyOwner {
+        require(msg.sender == owner);
+        _;
+    }
+    
     modifier onlyClient {
         require(msg.sender == client);
         _;
@@ -26,6 +31,7 @@ contract Job {
 
     mapping(address => Provider) public pendingProviders;
     
+    CanWork public owner;
     address public client;
     address public provider;
     address public disputeBy;
@@ -40,8 +46,9 @@ contract Job {
         onDispute
     }
 
-    constructor() public {
-        client = msg.sender;
+    constructor(address _client) public {
+        owner = msg.sender;
+        client = _client;
         state = State.pendingProvider;
     }
 
@@ -84,12 +91,11 @@ contract Job {
     }
     
     /*
-    * @dev a client or provider may mark the Job as onDispute
+    * @dev a client or provider may mark the Job as onDispute via CanWork contract
     */
-    function dispute() public {
+    function dispute(address _disputeBy) public onlyOwner {
         require(state == State.complete || state == State.pendingCompletion);
-        require(msg.sender == client || msg.sender == provider);
-        disputeBy = msg.sender;
+        disputeBy = _disputeBy;
         state = State.onDispute;
     }
     

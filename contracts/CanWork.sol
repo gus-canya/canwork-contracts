@@ -59,7 +59,7 @@ contract CanWork {
 
         fee = getFee();
         amount = getJobAmount();
-        escrow.deposit(amount);
+        escrow.deposit(client, amount);
     }
 
     function createJobDispute(uint256 _jobCount, Job job) public {
@@ -67,6 +67,10 @@ contract CanWork {
         Dispute dispute = new Dispute(job);
         jobs[_jobCount].Dispute = dispute;
         emit CreatedDispute(job.client(), _jobCount, dispute);
+    }
+
+    function withdraw(uint256 _jobCount) public {
+        require();
     }
 
     function getFee() public returns (uint256 fee) {}

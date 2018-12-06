@@ -1,0 +1,21 @@
+{
+  "name": "canwork",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@canya.github.com:gus-canya/canwork-contracts.git"
+  },
+  "author": "netpoe",
+  "license": "ISC",
+  "dependencies": {
+    "openzeppelin-solidity": "^2.0.0"
+  }
+}

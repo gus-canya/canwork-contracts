@@ -5,7 +5,7 @@ import './Job.sol';
 /*
 * @dev Dispute contract
 */
-contract JobDispute {
+contract Dispute {
 
     Job public job;
 
