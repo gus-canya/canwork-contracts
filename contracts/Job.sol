@@ -36,6 +36,9 @@ contract Job {
     address public provider;
     address public disputeBy;
     
+    bool public isFulfilled = false;
+    bool public isOnDispute = false;
+
     State public state;
     enum State {
         pendingProvider,
@@ -97,6 +100,7 @@ contract Job {
         require(state == State.complete || state == State.pendingCompletion);
         disputeBy = _disputeBy;
         state = State.onDispute;
+        isOnDispute = true;
     }
     
     /*
@@ -105,5 +109,7 @@ contract Job {
     function finish() onlyClient public {
         require(state == State.complete || state == State.onDispute);
         state = State.fullfilled;
+        isFulfilled = true;
+        isOnDispute = false;
     }
 }

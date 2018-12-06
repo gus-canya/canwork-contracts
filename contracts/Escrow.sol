@@ -18,35 +18,37 @@ import "./Secondary.sol";
 contract Escrow is Secondary {
   using SafeMath for uint256;
 
-  event Deposited(address indexed payee, uint256 weiAmount);
+  uint256 public amount = 0;
+  address public payee;
+
+  event Deposited(uint256 weiAmount);
+  event SetPayee(address indexed payee);
   event Withdrawn(address indexed payee, uint256 weiAmount);
-
-  mapping(address => uint256) private _deposits;
-
-  function depositsOf(address payee) public view returns (uint256) {
-    return _deposits[payee];
-  }
 
   /**
   * @dev Stores the sent amount as credit to be withdrawn.
   * @param payee The destination address of the funds.
   */
-  function deposit(address payee, uint256 amount) public onlyPrimary payable {
-    _deposits[payee] = _deposits[payee].add(amount);
-    emit Deposited(payee, amount);
+  function deposit() public onlyPrimary payable {
+    amount = msg.value;
+    emit Deposited(amount);
+  }
+
+  /**
+  * @param payee The destination address of the funds.
+  */
+  function setPayee(address _payee) public onlyPrimary {
+    payee = _payee;
+    emit SetPayee(payee);
   }
 
   /**
   * @dev Withdraw accumulated balance for a payee.
-  * @param payee The address whose funds will be withdrawn and transferred to.
   */
-  function withdraw(address payee) public onlyPrimary {
-    uint256 payment = _deposits[payee];
-
-    _deposits[payee] = 0;
-
+  function withdraw() public onlyPrimary {
+    uint256 payment = amount;
+    amount = 0;
     payee.transfer(payment);
-
     emit Withdrawn(payee, payment);
   }
 }

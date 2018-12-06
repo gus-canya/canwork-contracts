@@ -8,71 +8,58 @@ contract CanWork {
 
     string public version = '0.1';
 
-    uint256 public jobCount = 0;
-
-    event CreatedJob(address indexed client, uint256 indexed jobCount, address indexed Job);
-    event CreatedDispute(address indexed client, uint256 indexed jobCount, address indexed Dispute);
-    event CreatedEscrow(address indexed client, uint256 indexed jobCount, address indexed Escrow);
+    event CreatedJob(address indexed client, address indexed Job);
+    event CreatedEscrow(address indexed client, address indexed Escrow);
+    event CreatedDispute(address indexed creator, address indexed Dispute);
 
     event GotFee();
     event GotAmount();
 
-    struct JobGroup {
-        address Job;
-        address Dispute;
+    struct Contracts {
         address Escrow;
+        address Dispute;
     }
 
-    mapping (address => uint256[]) public jobsByOwner;
-    mapping (uint256 => JobGroup) public jobs;
+    Job[] public jobs;
+    mapping (address => Job[]) public jobsByOwner;
+    mapping (address => Contracts) public jobContracts;
   
     constructor() {}
 
-    function () payable {
-        createJobGroup();
-    }
+    function () payable {}
 
-    function createJobGroup() public {
-        jobCount++;
+    function createJob() public {
         client = msg.sender;
-        jobsByOwner[client].push(jobCount);
-        
         Job job = new Job(client);
-        Escrow escrow = new Escrow(job);
-        jobs[jobCount].Job = job;
-        jobs[jobCount].Escrow = escrow;
-        emit CreatedJob(client, jobCount, job);
-        emit CreatedEscrow(client, jobCount, escrow);
-    }
-    
-    function createJobGroup() public payable {
-        jobCount++;
-        client = msg.sender;
-        jobsByOwner[client].push(jobCount);
-        
-        Job job = new Job(client);
-        Escrow escrow = new Escrow(job);
-        jobs[jobCount].Job = job;
-        jobs[jobCount].Escrow = escrow;
-        emit CreatedJob(client, jobCount, job);
-        emit CreatedEscrow(client, jobCount, escrow);
-
-        fee = getFee();
-        amount = getJobAmount();
-        escrow.deposit(client, amount);
+        jobsByOwner[client].push(job);
+        emit CreatedJob(client, job);
     }
 
-    function createJobDispute(uint256 _jobCount, Job job) public {
+    function createEscrow(Job job) public payable {
+        Escrow escrow = new Escrow(job);
+        jobContracts[job].Escrow = escrow;
+        emit CreatedEscrow(job.client(), escrow);
+        uint256 fee = collectFee();
+        uint256 amount = getJobAmount(fee);
+        escrow.deposit(job.provider(), amount);
+    }
+
+    function createDispute(Job job) public {
+        require(jobContracts[job].Dispute == address(0));
         require(msg.sender == job.client() || msg.sender == job.provider());
+        job.dispute(msg.sender);
         Dispute dispute = new Dispute(job);
-        jobs[_jobCount].Dispute = dispute;
-        emit CreatedDispute(job.client(), _jobCount, dispute);
+        jobContracts[job].Dispute = dispute;
+        emit CreatedDispute(msg.sender, dispute);
+        escrow.transferPrimary(dispute);
     }
 
-    function withdraw(uint256 _jobCount) public {
-        require();
+    function authorizeWithdrawal(Job job) public {
+        require(job.isFulfilled());
+        Escrow escrow = jobContracts[job].Escrow;
+        escrow.transferPrimary(job.provider());
     }
 
-    function getFee() public returns (uint256 fee) {}
-    function getJobAmount() public returns (uint256 amount) {}
+    function collectFee() public returns (uint256 fee) {}
+    function getJobAmount(uint256 fee) public returns (uint256 amount) {}
 }
