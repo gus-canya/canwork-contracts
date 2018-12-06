@@ -27,13 +27,10 @@ contract Job {
     mapping(address => Provider) public pendingProviders;
     
     address public client;
-    
     address public provider;
-
     address public disputeBy;
-
+    
     State public state;
-
     enum State {
         pendingProvider,
         pendingCompletion,
