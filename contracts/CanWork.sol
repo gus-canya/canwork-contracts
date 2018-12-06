@@ -29,47 +29,44 @@ contract CanWork {
     constructor() {}
 
     function () payable {
-        createJob();
+        createJobGroup();
     }
 
-    function createJob() public {
+    function createJobGroup() public {
         jobCount++;
         client = msg.sender;
         jobsByOwner[client].push(jobCount);
         
         Job job = new Job(client);
-        Dispute dispute = new Dispute(job);
         Escrow escrow = new Escrow(job);
-
         jobs[jobCount].Job = job;
-        jobs[jobCount].Dispute = dispute;
         jobs[jobCount].Escrow = escrow;
-
         emit CreatedJob(client, jobCount, job);
-        emit CreatedDispute(client, jobCount, dispute);
         emit CreatedEscrow(client, jobCount, escrow);
     }
     
-    function createJob() public payable {
+    function createJobGroup() public payable {
         jobCount++;
         client = msg.sender;
         jobsByOwner[client].push(jobCount);
         
         Job job = new Job(client);
-        Dispute dispute = new Dispute(job);
         Escrow escrow = new Escrow(job);
-
         jobs[jobCount].Job = job;
-        jobs[jobCount].Dispute = dispute;
         jobs[jobCount].Escrow = escrow;
-
         emit CreatedJob(client, jobCount, job);
-        emit CreatedDispute(client, jobCount, dispute);
         emit CreatedEscrow(client, jobCount, escrow);
 
         fee = getFee();
         amount = getJobAmount();
         escrow.deposit(amount);
+    }
+
+    function createJobDispute(uint256 _jobCount, Job job) public {
+        require(msg.sender == job.client() || msg.sender == job.provider());
+        Dispute dispute = new Dispute(job);
+        jobs[_jobCount].Dispute = dispute;
+        emit CreatedDispute(job.client(), _jobCount, dispute);
     }
 
     function getFee() public returns (uint256 fee) {}
