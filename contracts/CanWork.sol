@@ -4,6 +4,14 @@ import './Job.sol';
 import './Escrow.sol';
 import './Dispute.sol';
 
+/**
+* Questions
+* what happens if the client raises a Dispute with another wallet. The Dispute gets resolved and the client gets part of the money back?
+* how can we make sure that the client is no in the Dispute with another wallet?
+* what % to give to a resolved Dispute?
+* should the Dispute have a deadline? If the deadline is met, transfer the funds to the provider?
+*/
+
 contract CanWork {
 
     string public version = '0.1';
@@ -44,6 +52,10 @@ contract CanWork {
         escrow.deposit(job.provider(), amount);
     }
 
+    /**
+    * @dev creates a Dispute contract and links it to a Job
+    * should the Escrow funds be managed by the Dispute contract?
+    */
     function createDispute(Job job) public {
         require(jobContracts[job].Dispute == address(0));
         require(msg.sender == job.client() || msg.sender == job.provider());
@@ -51,7 +63,7 @@ contract CanWork {
         Dispute dispute = new Dispute(job);
         jobContracts[job].Dispute = dispute;
         emit CreatedDispute(msg.sender, dispute);
-        escrow.transferPrimary(dispute);
+        // escrow.transferPrimary(dispute);
     }
 
     function authorizeWithdrawal(Job job) public {

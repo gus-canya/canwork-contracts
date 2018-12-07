@@ -1,5 +1,7 @@
 pragma solidity ^0.4.24;
 
+import "./Secondary.sol";
+
 /*
 * @dev Job contract
 * all these methods are executed by the parent CanWork contract
@@ -8,13 +10,8 @@ pragma solidity ^0.4.24;
 * Payments are handled by an Escrow contract or similar
 * A contract can consult the Job state and execute actions accordingly
 */
-contract Job {
+contract Job is Secondary {
 
-    modifier onlyOwner {
-        require(msg.sender == owner);
-        _;
-    }
-    
     modifier onlyClient {
         require(msg.sender == client);
         _;
@@ -96,7 +93,7 @@ contract Job {
     /*
     * @dev a client or provider may mark the Job as onDispute via CanWork contract
     */
-    function dispute(address _disputeBy) public onlyOwner {
+    function dispute(address _disputeBy) public onlyPrimary {
         require(state == State.complete || state == State.pendingCompletion);
         disputeBy = _disputeBy;
         state = State.onDispute;
@@ -104,9 +101,11 @@ contract Job {
     }
     
     /*
-    * @dev A client accepts that the job is complete
+    * @dev Primary determines the job is fullfilled
+    * Client is primary by default
+    * Dispute may be a primary
     */
-    function finish() onlyClient public {
+    function finish() onlyPrimary public {
         require(state == State.complete || state == State.onDispute);
         state = State.fullfilled;
         isFulfilled = true;
