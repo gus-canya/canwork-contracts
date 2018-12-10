@@ -12,6 +12,11 @@ import "./Secondary.sol";
 */
 contract Job is Secondary {
 
+    modifier bothActors {
+        require(msg.sender == client || msg.sender == provider);
+        _;
+    }
+
     modifier onlyClient {
         require(msg.sender == client);
         _;
@@ -93,7 +98,7 @@ contract Job is Secondary {
     /*
     * @dev a client or provider may mark the Job as onDispute via CanWork contract
     */
-    function dispute(address _disputeBy) public onlyPrimary {
+    function dispute(address _disputeBy) public onlyPrimary, bothActors {
         require(state == State.complete || state == State.pendingCompletion);
         disputeBy = _disputeBy;
         state = State.onDispute;
