@@ -12,11 +12,6 @@ import "./Secondary.sol";
 */
 contract Service is Secondary {
 
-    modifier bothActors {
-        require(msg.sender == client || msg.sender == provider);
-        _;
-    }
-
     modifier onlyClient {
         require(msg.sender == client);
         _;
@@ -27,13 +22,19 @@ contract Service is Secondary {
         _;
     }
 
+    event AcceptedServiceTerms(address indexed pendingProvider);
+    event CanceledService(address indexed client);
+    event ApprovedProvider(address indexed client, address indexed provider);
+    event CompletedJob();
+    event RaisedDispute(address indexed disputeBy);
+    event FinishedJob();
+
     struct Provider {
         bool exists;
     }
 
     mapping(address => Provider) public pendingProviders;
     
-    CanWork public owner;
     address public client;
     address public provider;
     address public disputeBy;
@@ -52,7 +53,6 @@ contract Service is Secondary {
     }
 
     constructor(address _client) public {
-        owner = msg.sender;
         client = _client;
         state = State.pendingProvider;
     }
@@ -67,6 +67,7 @@ contract Service is Secondary {
         require(state == State.pendingProvider);
         require(!pendingProviders[msg.sender].exists);
         pendingProviders[msg.sender].exists = true;
+        emit AcceptedServiceTerms(msg.sender);
     }
 
     /*
@@ -75,6 +76,7 @@ contract Service is Secondary {
     function cancel() onlyClient public {
         require(state == State.pendingProvider || state == State.pendingCompletion);
         state = State.cancelled;
+        emit CanceledService(client);
     }
 
     /*
@@ -85,6 +87,7 @@ contract Service is Secondary {
         require(state == State.pendingProvider);
         provider = _provider;
         state = State.pendingCompletion;
+        emit ApprovedProvider(client, provider);
     }
     
     /*
@@ -93,16 +96,19 @@ contract Service is Secondary {
     function complete() onlyProvider public {
         require(state == State.pendingCompletion);
         state = State.complete;
+        emit CompletedJob();
     }
     
     /*
     * @dev a client or provider may mark the Service as onDispute via CanWork contract
     */
-    function dispute(address _disputeBy) public onlyPrimary, bothActors {
+    function dispute(address _disputeBy) public onlyPrimary {
         require(state == State.complete || state == State.pendingCompletion);
+        require(_disputeBy == client || _disputeBy == provider);
         disputeBy = _disputeBy;
         state = State.onDispute;
         isOnDispute = true;
+        emit RaisedDispute(disputeBy);
     }
     
     /*
@@ -115,5 +121,6 @@ contract Service is Secondary {
         state = State.fullfilled;
         isFulfilled = true;
         isOnDispute = false;
+        emit FinishedJob();
     }
 }
